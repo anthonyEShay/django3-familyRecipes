@@ -1,0 +1,58 @@
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <div id="placeList"></div>
+        <script>
+            bigList = localStorage.getItem("listOfRecipes");
+            bigList = JSON.parse(bigList);
+    conversions = {"1/4": .25, "1/3": .33, "1/2": .5};
+    aString = "";
+        fullIList = {};
+        for (x in bigList){
+            for(i in bigList[x][2]){
+                temp = bigList[x][2][i];
+                if (temp[2] in fullIList){
+                    //check if types match, yes - add them together
+                    if (temp[1] == fullIList[temp[2]][1]){
+                        if (isNaN (temp[0])){
+                            fullIList [temp[2]] = [conversions[temp[0]] * bigList[x][0] + fullIList [temp[2]][0], temp[1]];
+                        }else{
+                            fullIList [temp[2]] = [parseFloat(temp[0]) * bigList[x][0] + fullIList [temp[2]][0], temp[1]];
+                        }
+                    //no - check if key_type exists, yes - add them together
+                    }else if( temp[2] + "_" + temp[1] in fullIList){
+                        tempName = temp[2] + "_" + temp[1];
+                        if (isNaN (temp[0])){
+                            fullIList [tempName] = [conversions[temp[0]] * bigList[x][0] + fullIList [tempName][0], temp[1]];
+                        }else{
+                            fullIList [tempName] = [parseFloat(temp[0]) * bigList[x][0] + fullIList [tempName][0], temp[1]];
+                        }
+                    //no - add key_type
+                    }else{
+                        tempName = temp[2] + "_" + temp[1];
+                        if (isNaN (temp[0])){
+                            fullIList [tempName] = [conversions[temp[0]] * bigList[x][0], temp[1]];
+                        }else{
+                            fullIList [tempName] = [parseFloat(temp[0]) * bigList[x][0], temp[1]];
+                        }
+                    }
+                }else{
+                    //Not exist so add key
+                    if (isNaN (temp[0])){
+                        fullIList [temp[2]] = [conversions[temp[0]] * bigList[x][0], temp[1]];
+                    }else{
+                        fullIList [temp[2]] = [parseFloat(temp[0]) * bigList[x][0], temp[1]];
+                    }
+                }
+            }
+        }
+        for (i in fullIList){
+            aString += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
+            aString += " - " + i + "</li>";
+        }
+        document.getElementById("placeList").innerHTML = aString;
+        </script>
+    </body>
+</html>

@@ -1,0 +1,79 @@
+
+
+{% extends 'userPages/baseIndex.html' %}
+
+{% block content %}
+
+
+
+<h1>{{recipe.title}}</h1>
+
+{% if recipe.image %}
+<img src="{{ recipe.image.url }}" style="max-height: 300px; margin-bottom: 10px;">
+{% else %}
+<h2>--No Image Found--</h2>
+{% endif %}
+
+<form class="container-fluid justify-content-end" method="POST" action="{% url 'updateFav' recipe.title %}">
+    {% csrf_token %}
+  <button {% if isFavorite %} class="btn btn-warning" type="submit">Unfavorite Recipe {% else %} class="btn btn-success" type="submit">Favorite Recipe {% endif %} </button>
+</form>
+
+<script>
+    //Add another favorite button to instead call a function which switches how look and clicks a form with post that either adds or removes the favorite from the list
+    //For now just return redirect is fine
+</script>
+
+
+<h2>Ingredients</h2>
+<ul id="ingredList"></ul>
+<p>{{ recipe.ingredients }}</p>
+
+<script>
+    //Populate ingredient unordered list
+    var ingred = JSON.parse("{{ ingList|escapejs }}")
+    var astring = ""
+    for (i in ingred){
+        astring += "<li>" + String(ingred[i][0]);
+        if (ingred[i][1] != ""){
+            astring += " " + String(ingred[i][1]);
+        }
+        astring += " " + String(ingred[i][2]) + "</li>";
+    }
+    document.getElementById("ingredList").innerHTML = astring;
+
+    //Add Recipe to List (Local Storage) button functionality
+    function addIngred(){
+        bigList = localStorage.getItem("listOfRecipes");
+        if (bigList == null){
+            bigList = [[1, "{{ recipe.title }}", ingred]];
+            localStorage.setItem("listOfRecipes", JSON.stringify(bigList));
+            return;
+        }
+        bigList = JSON.parse(bigList);
+        foundType = false;
+        for (i in bigList){
+            if (bigList[i][1] == "{{ recipe.title }}"){
+                bigList[i][0] += 1;
+                foundType = true;
+                break;
+            }
+        }
+        if (!foundType){
+            bigList.push([1, "{{ recipe.title }}", ingred]);
+        }
+        localStorage.setItem("listOfRecipes", JSON.stringify(bigList));
+    }
+
+</script>
+
+<form class="container-fluid justify-content-end">
+    {% csrf_token %}
+  <button class="btn btn-success" type="button" onclick="addIngred()">Add Recipe to List</button>
+</form>
+
+
+<h2>Instructions</h2>
+<p>{{ recipe.instructions|safe }}</p>
+
+{% endblock %}

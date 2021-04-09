@@ -1,0 +1,121 @@
+
+
+{% extends 'userPages/baseIndex.html' %}
+
+{% block content %}
+
+<h1>User Home</h1>
+<br><br>
+<h2>Current Shopping List:</h2>
+<p id="currentSList"></p>
+<form class="container-fluid justify-content-end" method="POST" action="" hidden id="deleteListButton">
+    <button class="btn btn-success" type="button" onclick="clearList()">Delete Current List</button>
+</form>
+<br>
+<h2>Saved Shopping List:</h2>
+{% if userP.savedCart is null %}
+<p>Looks like you don't have a saved list.</p>
+<form class="container-fluid justify-content-end" method="POST" action="{% url 'saveToUserCart' %}" hidden id="saveListButton">
+    {% csrf_token %}
+    <input id="listToSave1" type="text" name="listToSave" hidden>
+    <button class="btn btn-success" type="button" onclick="saveList('1')">Save Current List to Memory</button>
+    <button class="btn btn-success" id="buttonToSave1" type="submit" hidden>Save List</button>
+</form>
+{% else %}
+<p id="currentMList"></p>
+<form class="container-fluid justify-content-end" method="POST" action="{% url 'loadUserCart' %}">
+    {% csrf_token %}
+    <button class="btn btn-success" type="submit">Load Saved List</button>
+    <button class="btn btn-warning" type="button" onclick="saveList('2')">Overwrite Saved List</button>
+    <button class="btn btn-danger" type="button" onclick="deleteList()">Delete Saved List</button>
+</form>
+<form class="container-fluid justify-content-end" method="POST" action="{% url 'deleteUserCart' %}" hidden>
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit" id="listToDelete">Delete Saved List</button>
+</form>
+<form class="container-fluid justify-content-end" method="POST" action="{% url 'saveToUserCart' %}" hidden>
+    {% csrf_token %}
+    <input id="listToSave2" type="text" name="listToSave" hidden>
+    <button class="btn btn-success" id="buttonToSave2" type="submit" hidden>Save List</button>
+</form>
+{% endif %}
+
+<script>
+    //If contains load cart data
+    {% if loadCart %}
+    toLoadCart = JSON.parse("{{ loadCart|escapejs }}")
+    localStorage.setItem("listOfRecipes", JSON.stringify( toLoadCart ));
+    {% endif %}
+
+
+    //Show Save Current List button if something in session storage
+    bigList = localStorage.getItem("listOfRecipes");
+    if (bigList != null){
+        if (document.getElementById("saveListButton")){
+            document.getElementById("saveListButton").hidden = false;
+        }
+        if (document.getElementById("deleteListButton")){
+            document.getElementById("deleteListButton").hidden = false;
+        }
+        aString = "";
+        tempBigList = JSON.parse(bigList);
+        for (i in tempBigList){
+            aString += String(tempBigList[i][0]) + " - ";
+            aString += String(tempBigList[i][1]) + ", ";
+        }
+        document.getElementById("currentSList").innerHTML = aString;
+    }else{
+        document.getElementById("currentSList").innerHTML = "Looks like you don't have a current list."
+    }
+
+    //Display user saved cart neatly if exist
+    {% if userP.savedCart is not null %}
+    tempBigList = JSON.parse("{{ userP.savedCart|escapejs }}");
+    aString = "";
+    for (i in tempBigList){
+            aString += String(tempBigList[i][0]) + " - ";
+            aString += String(tempBigList[i][1]) + ", ";
+    }
+    document.getElementById("currentMList").innerHTML = aString;
+    {% endif %}
+
+    //Delete current list in localStorage
+    function clearList(){
+        localStorage.removeItem("listOfRecipes");
+        location.reload(true); //I'm being lazy, this should instead update by changing hiddes and text
+    }
+
+    //Save and Overwrite button logic
+    function saveList(aType){
+        if(aType == "1"){
+            document.getElementById('listToSave1').value = localStorage.getItem("listOfRecipes");
+            document.getElementById('buttonToSave1').click();
+        }else if (aType == "2"){
+            document.getElementById('listToSave2').value = localStorage.getItem("listOfRecipes");
+            document.getElementById('buttonToSave2').click();
+        }
+    }
+
+    //Delete saved in memmory list logic
+    function deleteList(){
+        document.getElementById('listToDelete').click();
+    }
+</script>
+
+
+<br>
+<h2>Favorite Recipes:</h2>
+{% if userP.favorites is null %}
+<p>Looks like you don't have any favorite recipes.</p>
+{% else %}
+<ul>
+    {% for aFav in userP.favorites.all %}
+    <li><a href="{% url 'recipeDetail' aFav %}">{{aFav}}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<h2>Comments:</h2>
+<p>Blank</p>
+
+{% endblock %}
