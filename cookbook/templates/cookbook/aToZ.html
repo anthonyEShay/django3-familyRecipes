@@ -4,9 +4,9 @@
 
 {% block content %}
 
-<h1>Recipe List</h1>
 
-<div class="d-flex flex-column">
+<div class="container">
+  <h1 class="text-center">Recipe List</h1>
     {% for recipe in recipes %}
     <div class="p-2"><a href="{% url 'recipeDetail' recipe.title %}"><h4>{{ recipe.title }}</h4></a></div>
     {% endfor %}

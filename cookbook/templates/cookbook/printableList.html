@@ -7,7 +7,7 @@
         <script>
             bigList = localStorage.getItem("listOfRecipes");
             bigList = JSON.parse(bigList);
-    conversions = {"1/4": .25, "1/3": .33, "1/2": .5};
+            conversions = {"1/4": .25, "1/3": .33, "1/2": .5, "":0};
     aString = "";
         fullIList = {};
         for (x in bigList){
@@ -49,8 +49,12 @@
             }
         }
         for (i in fullIList){
-            aString += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
-            aString += " - " + i + "</li>";
+            if (String(fullIList[i][0]) == 'NaN'){
+                aString += "<li> " + i + "</li>";
+            }else{
+                aString += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
+                aString += " - " + i + "</li>";
+            }
         }
         document.getElementById("placeList").innerHTML = aString;
         </script>

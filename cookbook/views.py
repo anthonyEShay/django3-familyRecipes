@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Recipe
 from json import dumps
-from userPages.models import UserProfile
+from userPages.models import UserProfile, UserComment
 
 # Create your views here.
 
@@ -19,7 +19,10 @@ def recipeDetail(request, recipeName):
             if aRec.title == recipeName:
                 isFavorite = True
                 break
-    return render(request, 'cookbook/recipeDetail.html', {'recipe':recipe, 'ingList':ingredients, 'isFavorite':isFavorite})
+    comments = UserComment.objects.filter(recipe=recipe).order_by('-created')
+    if not comments.exists():
+        comments = None
+    return render(request, 'cookbook/recipeDetail.html', {'recipe':recipe, 'ingList':ingredients, 'isFavorite':isFavorite, 'userComments':comments})
 
 def recipeSearch(request):
     if request.method != 'POST':

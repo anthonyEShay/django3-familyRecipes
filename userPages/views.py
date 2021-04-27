@@ -4,13 +4,19 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from .models import UserProfile
+from .models import UserProfile, UserComment
 from cookbook.models import Recipe
 
 # Create your views here.
 
 def homePage (request):
-    return render(request, 'userPages/index.html')
+    recipesOfWeek = ['Pumpkin Cream Pie', 'Easy Breezy Cheesecake', 'Instant Salsa', 'Perfect Scrambled Eggs']
+    recipeList = Recipe.objects.filter(title=recipesOfWeek[0])
+    for x in range(1, 4):
+        tempSe = Recipe.objects.filter(title=recipesOfWeek[x])
+        recipeList = recipeList | tempSe
+    #print(recipeList)
+    return render(request, 'userPages/index.html', {'recipeList':recipeList})
 
 @login_required
 def saveToUserCart(request):
@@ -21,16 +27,17 @@ def saveToUserCart(request):
             userP.update(savedCart = tempCart)
         except IntegrityError:
             print("Error Adding")
-        return render(request, 'userPages/userPage.html', {'userP':userP[0]})
+        return userPage(request) #render(request, 'userPages/userPage.html', {'userP':userP[0]})
     else:
-        return render(request, 'userPages/index.html')
+        return userPage(request) #render(request, 'userPages/index.html')
 
 @login_required
 def loadUserCart(request):
     if request.method == 'POST':
         userP = UserProfile.objects.get(user=request.user)
         tempCart = userP.savedCart
-        return render(request, 'userPages/userPage.html', {'userP':userP, 'loadCart':tempCart})
+        comments = UserComment.objects.filter(user=request.user)
+        return render(request, 'userPages/userPage.html', {'userP':userP, 'loadCart':tempCart, 'userC':comments})
     else:
         return render(request, 'userPages/index.html')
 
@@ -42,9 +49,9 @@ def deleteUserCart(request):
             userP.update(savedCart = None)
         except IntegrityError:
             print("Error Adding")
-        return render(request, 'userPages/userPage.html', {'userP':userP[0]})
+        return userPage(request) #render(request, 'userPages/userPage.html', {'userP':userP[0]})
     else:
-        return render(request, 'userPages/index.html')
+        return userPage(request) #render(request, 'userPages/index.html')
 
 def signupUser(request):
     if request.method == 'GET':
@@ -70,7 +77,8 @@ def signupUser(request):
 @login_required
 def userPage (request):
     userP = UserProfile.objects.get(user=request.user)
-    return render(request, 'userPages/userPage.html', {'userP':userP} )
+    comments = UserComment.objects.filter(user=request.user).order_by('-created')
+    return render(request, 'userPages/userPage.html', {'userP':userP, 'userC':comments} )
 
 
 @login_required
@@ -105,5 +113,37 @@ def updateFavorite(request, recipeName):
             aRec = Recipe.objects.get(title=recipeName)
             userP.favorites.add(aRec)
         return redirect('recipeDetail', recipeName)
+    else:
+        return redirect('home')
+
+@login_required
+def createComment(request):
+    if request.method == 'POST':
+        userP = UserProfile.objects.filter(user=request.user)
+        recipeName = request.POST['recipeName']
+        postRecipe = Recipe.objects.filter(title=recipeName)
+        commentText = request.POST['commentText']
+        try:
+            newComment = UserComment(user=request.user, recipe=postRecipe[0], commentText=commentText)
+            newComment.save()
+            return redirect('recipeDetail', recipeName)
+        except (IntegrityError, ValueError) as e:
+            print("Error Adding a Comment")
+            print(e)
+        return redirect('home')
+    else:
+        return redirect('home')
+
+@login_required
+def deleteComment(request):
+    if request.method == 'POST':
+        delComment = get_object_or_404(UserComment, user=request.user, pk=request.POST['deletePK'])
+        try:
+            #delComment = UserComment.objects.filter(user=request.user, pk=request.POST['deletePK'])
+            delComment.delete()
+        except (IntegrityError, ValueError) as e:
+            print("Error Deleting a Comment")
+            print(e)
+        return userPage(request)
     else:
         return redirect('home')

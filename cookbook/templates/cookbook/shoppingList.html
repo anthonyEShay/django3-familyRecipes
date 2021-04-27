@@ -3,28 +3,45 @@
 
 {% extends 'userPages/baseIndex.html' %}
 
+{% block head %}
+<style>
+    .delButton{
+        height: 1em;
+        width: 1em;
+    }
+    .delButton:hover{
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex flex-column">
+{% load static %}
+<!--<button type="button" class="btn btn-danger btn-sm" style="width: 1.5em; ">X</button>-->
+<div class="container">
     <h1>Recipe List</h1>
     <div class="d-flex flex-column">
         <ul id="recipeList"></ul>
     </div>
     <br>
-
     <form class="container-fluid justify-content-end" id="printListButton" method="GET" target="_blank" action="{% url 'printableList' %}">
         {% csrf_token %}
         <button class="btn btn-success" type="submit">Open Printable List</button>
     </form>
+    <br>
     <h1 id="ingredListLogo">Ingredients List</h1>
     <div class="d-flex flex-column">
-        <ul id="ingredList"></ul>
+        <div class="row">
+        <div class="col"><ul id="ingredList"></ul></div>
+        <div class="col"><ul id="ingredList2"><li>Test</li></ul></div>
+    </div>
     </div>
 
 </div>
 
 
 <script>
-    bigList = localStorage.getItem("listOfRecipes");
+    var bigList = localStorage.getItem("listOfRecipes");
     populate = true;
     if (bigList == null){
         document.getElementById("recipeList").innerHTML = "Looks like nothing has been added to your list.";
@@ -34,19 +51,27 @@
     }else{
         bigList = JSON.parse(bigList);
     }
+
     //Populate recipe unordered list
-    aString = "";
-    if (populate){
-        for (i in bigList){
-            aString += "<li>" + String(bigList[i][0]) + " - ";
-            aString += String(bigList[i][1]) + "</li>";
+    function populateRecipe(populate){
+        aString = "";
+        if (populate){
+            for (i in bigList){
+                aString += "<li>" + String(bigList[i][0]) + " - ";
+                aString += String(bigList[i][1]) + " ";
+                aString += '<img src="{% static "cookbook/redXsmall.png" %}" class="delButton" onclick="deleteRecipe(&#39;' + String(bigList[i][1]) + '&#39;)">' + "</li>";
+                //In future this should be changed to use index position, found error when recipe name contains a '
+            }
+            document.getElementById("recipeList").innerHTML = aString;
         }
-        document.getElementById("recipeList").innerHTML = aString;
     }
+    populateRecipe(populate);
 
     //Populate ingredient unordered list; Sooo Messy. DON'T LOOK AT ME!!! I'm Hideous
-    conversions = {"1/4": .25, "1/3": .33, "1/2": .5};
+    function populateIngredient(populate){
+        conversions = {"1/4": .25, "1/3": .33, "1/2": .5, "":0};
     aString = "";
+    aString2 = "";
     if (populate){
         fullIList = {};
         for (x in bigList){
@@ -87,12 +112,66 @@
                 }
             }
         }
+        counter = true;
         for (i in fullIList){
-            aString += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
-            aString += " - " + i + "</li>";
+            if (counter){
+                if (String(fullIList[i][0]) == 'NaN'){
+                aString += "<li> " + i + "</li>";
+            }else{
+                aString += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
+                aString += " - " + i + "</li>";
+            }
+            counter = false;
+            }else{
+                if (String(fullIList[i][0]) == 'NaN'){
+                aString2 += "<li> " + i + "</li>";
+            }else{
+                aString2 += "<li>" + String(fullIList[i][0]) + " " + fullIList[i][1];
+                aString2 += " - " + i + "</li>";
+            }
+            counter = true;
+            }
         }
         document.getElementById("ingredList").innerHTML = aString;
+        document.getElementById("ingredList2").innerHTML = aString2;
     }
+    }
+
+    populateIngredient(populate);
+    
+    //Delete a recipe item from list
+    //needs a recipe name passed in, get big list, make sure name exists in bigList[x][1]
+    //If yes find correct element number, check bigList[x][0] and subtract 1, if goes 0 make sure to delete whole entry
+    //Run populate ingredients again
+    function deleteRecipe(recipeName){
+        toDel = -1;
+        for (x = 0; x < bigList.length; x++){
+            if (bigList[x][1] == recipeName){
+                toDel = x;
+                break;
+            }
+        }
+        if (toDel == -1){
+            return;
+        }else{
+            bigList[toDel][0] -= 1;
+            if(bigList[toDel][0] == 0){
+                bigList.splice(toDel, 1);
+            }
+            if (bigList.length != 0){
+                localStorage.setItem("listOfRecipes", JSON.stringify(bigList));
+                populateRecipe(true);
+                populateIngredient(true);
+            }else{
+                localStorage.removeItem("listOfRecipes");
+                document.getElementById("recipeList").innerHTML = "Looks like nothing has been added to your list.";
+                document.getElementById("ingredList").innerHTML = "";
+                document.getElementById("ingredListLogo").hidden = true;
+                document.getElementById("printListButton").hidden = true;
+            }
+        }
+    }
+
 
     /*
     var ingred = JSON.parse("{{ ingList|escapejs }}")

@@ -3,15 +3,20 @@
 {% extends 'userPages/baseIndex.html' %}
 
 {% block content %}
-
-<h1>User Home</h1>
+<div class="container">
+<h1 class="text-center">{{user.username}}'s Home</h1>
 <br><br>
+<div class="row">
+
+    <div class="col">
 <h2>Current Shopping List:</h2>
 <p id="currentSList"></p>
 <form class="container-fluid justify-content-end" method="POST" action="" hidden id="deleteListButton">
     <button class="btn btn-success" type="button" onclick="clearList()">Delete Current List</button>
 </form>
-<br>
+</div>
+
+<div class="col">
 <h2>Saved Shopping List:</h2>
 {% if userP.savedCart is null %}
 <p>Looks like you don't have a saved list.</p>
@@ -29,6 +34,7 @@
     <button class="btn btn-warning" type="button" onclick="saveList('2')">Overwrite Saved List</button>
     <button class="btn btn-danger" type="button" onclick="deleteList()">Delete Saved List</button>
 </form>
+
 <form class="container-fluid justify-content-end" method="POST" action="{% url 'deleteUserCart' %}" hidden>
     {% csrf_token %}
     <button class="btn btn-danger" type="submit" id="listToDelete">Delete Saved List</button>
@@ -39,6 +45,41 @@
     <button class="btn btn-success" id="buttonToSave2" type="submit" hidden>Save List</button>
 </form>
 {% endif %}
+</div>
+</div>
+
+<br><hr />
+<h2>Favorite Recipes:</h2>
+{% if userP.favorites is null %}
+<p>Looks like you don't have any favorite recipes.</p>
+{% else %}
+<ul>
+    {% for aFav in userP.favorites.all %}
+    <li><a href="{% url 'recipeDetail' aFav %}">{{aFav}}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<br><hr />
+<h2>Comments:</h2>
+{% if userC %}
+<dl>
+    {% for comment in userC %}
+    <dt><h4>{{comment.recipe.title}}</h4> | {{ comment.created }}</dt>
+    <dd>{{comment.commentText}}</dd>
+    <form class="container-fluid justify-content-end text-right" method="POST" action="{% url 'deleteComment' %}">
+        {% csrf_token %}
+        <input type="text" name="deletePK" value="{{comment.pk}}" hidden>
+        <button class="btn btn-danger" id="buttonToSave2" type="submit">Delete Comment</button>
+    </form>
+    <hr />
+    {% endfor %}
+</dl>
+{% else %}
+<p>Looks like you haven't made any comments yet.</p>
+{% endif %}
+
+</div>
 
 <script>
     //If contains load cart data
@@ -82,7 +123,7 @@
     //Delete current list in localStorage
     function clearList(){
         localStorage.removeItem("listOfRecipes");
-        location.reload(true); //I'm being lazy, this should instead update by changing hiddes and text
+        location.reload(true); //I'm being lazy, this should instead update by changing hides and text
     }
 
     //Save and Overwrite button logic
@@ -103,19 +144,5 @@
 </script>
 
 
-<br>
-<h2>Favorite Recipes:</h2>
-{% if userP.favorites is null %}
-<p>Looks like you don't have any favorite recipes.</p>
-{% else %}
-<ul>
-    {% for aFav in userP.favorites.all %}
-    <li><a href="{% url 'recipeDetail' aFav %}">{{aFav}}</a></li>
-    {% endfor %}
-</ul>
-{% endif %}
-
-<h2>Comments:</h2>
-<p>Blank</p>
 
 {% endblock %}

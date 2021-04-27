@@ -33,6 +33,8 @@ urlpatterns = [
     path('saveToUserCart/', userViews.saveToUserCart, name='saveToUserCart'),
     path('deleteUserCart/', userViews.deleteUserCart, name='deleteUserCart'),
     path('loadUserCart/', userViews.loadUserCart, name='loadUserCart'),
+    path('createComment/', userViews.createComment, name='createComment'),
+    path('deleteComment/', userViews.deleteComment, name='deleteComment'),
 
 
     # Cook Book pages

@@ -5,31 +5,96 @@
 {% block content %}
 
 
+<div class="container">
+<h1 class="text-center">{{recipe.title}}</h1>
+<br>
+<div class="row">
+    <div class="col-sm-4">
+        <h2>Ingredients</h2>
+        <ul id="ingredList"></ul>
+        <!--<p>{{ recipe.ingredients }}</p>-->
+        <form class="container-fluid justify-content-end">
+            {% csrf_token %}
+          <button class="btn btn-success" type="button" onclick="addIngred()">Add Recipe to List</button>
+          <label style="color: red; padding-left: 1em;" id="addText"></label>
+        </form>
+        <br>
+        <form class="container-fluid justify-content-end" method="POST" action="{% url 'updateFav' recipe.title %}">
+            {% csrf_token %}
+            <button {% if isFavorite %} class="btn btn-warning" type="submit">Unfavorite Recipe {% else %} class="btn btn-success" type="submit">Favorite Recipe {% endif %} </button>
+        </form>
+    </div>
+    <div class="col-sm-8">
+        {% if recipe.image %}
+        <img src="{{ recipe.image.url }}" style="max-height: 400px; margin-bottom: 10px;" class="float-right">
+        {% else %}
+        <h2 style="padding-top: 75px;" class="text-center">--No Image Added--</h2>
+        {% endif %}
+    </div>
+</div>
+<hr />
+<br>
 
-<h1>{{recipe.title}}</h1>
 
-{% if recipe.image %}
-<img src="{{ recipe.image.url }}" style="max-height: 300px; margin-bottom: 10px;">
+<h2>Instructions</h2>
+<p>{{ recipe.instructions|safe }}</p>
+
+
+<hr />
+<br>
+
+<div class="container"></div>
+<div class="row">
+    <div class="col"><h2>Comments</h2></div>
+    <div class="col">
+        <form class="container-fluid justify-content-end text-right" style="padding-top: 5px;" id="addCommentButton">
+            {% csrf_token %}
+          <button class="btn btn-primary" type="button" onclick="showCommentMake()">Add a Comment</button>
+        </form>
+    </div>
+</div>
+<br>
+<div class="row" id="postCommentForm" hidden>
+    <form method="POST" style="min-width: 100%;" class="text-right" action="{% url 'createComment' %}">
+        {% csrf_token %}
+        <div class="form-group shadow-textarea">
+            <textarea name="commentText" class="form-control" id="commentText" placeholder="Write a comment..."></textarea>
+        </div>
+        <input type="text" id="recipeName" name="recipeName" value="{{recipe.title}}" hidden>
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+    </form>
+</div>
+
+
+{% if userComments %}
+<dl>
+    {% for comment in userComments %}
+    <dt><h4>{{comment.user.username}}</h4> | {{ comment.created }}</dt>
+    <dd>{{comment.commentText}}</dd>
+    <hr />
+    {% endfor %}
+</dl>
 {% else %}
-<h2>--No Image Found--</h2>
+<p>Looks like there are no comments yet.</p>
 {% endif %}
 
-<form class="container-fluid justify-content-end" method="POST" action="{% url 'updateFav' recipe.title %}">
-    {% csrf_token %}
-  <button {% if isFavorite %} class="btn btn-warning" type="submit">Unfavorite Recipe {% else %} class="btn btn-success" type="submit">Favorite Recipe {% endif %} </button>
-</form>
 
 <script>
     //Add another favorite button to instead call a function which switches how look and clicks a form with post that either adds or removes the favorite from the list
     //For now just return redirect is fine
+
+    function showCommentMake(){
+        document.getElementById("postCommentForm").hidden = false;
+        document.getElementById("addCommentButton").hidden = true;
+    }
 </script>
 
 
-<h2>Ingredients</h2>
-<ul id="ingredList"></ul>
-<p>{{ recipe.ingredients }}</p>
+
 
 <script>
+    var addCount = 0;
+
     //Populate ingredient unordered list
     var ingred = JSON.parse("{{ ingList|escapejs }}")
     var astring = ""
@@ -48,6 +113,8 @@
         if (bigList == null){
             bigList = [[1, "{{ recipe.title }}", ingred]];
             localStorage.setItem("listOfRecipes", JSON.stringify(bigList));
+            addCount += 1;
+            document.getElementById("addText").innerHTML = "Added";
             return;
         }
         bigList = JSON.parse(bigList);
@@ -63,17 +130,17 @@
             bigList.push([1, "{{ recipe.title }}", ingred]);
         }
         localStorage.setItem("listOfRecipes", JSON.stringify(bigList));
+        addCount += 1;
+        if (addCount > 1){
+            document.getElementById("addText").innerHTML = "Added " + String(addCount);
+        }else{
+            document.getElementById("addText").innerHTML = "Added";
+        }
     }
 
 </script>
 
-<form class="container-fluid justify-content-end">
-    {% csrf_token %}
-  <button class="btn btn-success" type="button" onclick="addIngred()">Add Recipe to List</button>
-</form>
 
-
-<h2>Instructions</h2>
-<p>{{ recipe.instructions|safe }}</p>
+</div>
 
 {% endblock %}

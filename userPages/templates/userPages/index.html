@@ -2,8 +2,69 @@
 
 {% extends 'userPages/baseIndex.html' %}
 
+{% block head %}
+<style>
+
+</style>
+{% endblock %}
+
+
 {% block content %}
 
-<h1>Home Page</h1>
+{% load static %}
+
+<div class="container">
+    <h1 class="text-center">Shay Family Recipes</h1>
+    <br>
+    <h3 class="text-center">Welcome to the Shay Family's Recipe Repository</h3>
+    <br>
+    <p>This responsive HTML5 Full Stack website is dedicated to showcasing the many world class recipes the Shay family has tried and developed 
+        over the years. Feel free to try the shopping cart feature which allows users of this web app to easily create a shopping list with all 
+        the supplies they will need to create the meals on this site. The shopping list is stored in local storage on the users machine but users can 
+        also create an account in order to save their shopping list at any time to the cloud.</p>
+
+    <br><hr /><br>
+    <h3 class="text-center">Create An Account For Free</h3>
+    <br>
+    <div class="row">
+        <div class="col"><div class="text-center"><img src="{% static 'userPages/favorite_sm.png' %}" height="200px"></div><br><h4 class="text-center">Like Your Favorite Recipes</h4></div>
+        <div class="col"><div class="text-center"><img src="{% static 'userPages/list_sm.png' %}" height="200px"></div><br><h4 class="text-center">Make and Store Shopping Lists</h4></div>
+        <div class="col"><div class="text-center"><img src="{% static 'userPages/dollar_sm.png' %}" height="200px"></div><br><h4 class="text-center">Forever Free</h4></div>
+    </div>
+    
+    {% if not user.is_authenticated %}
+    <br><br>
+    <div class="row">
+        <div class="col"></div>
+        <div class="col text-center">
+        <form class="container-fluid" method="GET" action="{% url 'signupUser' %}">
+            {% csrf_token %}
+          <button class="btn btn-lg btn-success" type="submit" style="margin-left: 10px;">Sign Up Now</button>
+        </form>
+    </div>
+    <div class="col"></div>
+</div>
+{% endif %}
+
+
+    <br><hr /><br>
+    <h3 class="text-center">This Weeks Top Recipes</h3>
+    
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for topW in recipeList %}
+        <div class="col" style="padding-top: 1em;">
+          <div class="card">
+            <div class="text-center"><img src="{{ topW.image.url }}" class="card-img-top" style="max-height: 350px; max-width: fit-content;" alt="Picture of {{topW.title}}"></div>
+            <div class="card-body">
+              <h5 class="card-title text-center"><a href="{% url 'recipeDetail' topW.title %}">{{topW.title}}</a></h5>
+              <!--<p class="card-text">This content is a little bit longer.</p>-->
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+</div>
+
 
 {% endblock %}
